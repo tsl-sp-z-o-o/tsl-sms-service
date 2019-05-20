@@ -1,0 +1,22 @@
+﻿@model SmsIndexViewModel
+@{
+    ViewData["Title"] = "Index";
+}
+
+@await Html.PartialAsync("_MessageView")
+<div class="row">
+
+    <div class="col-md-6">
+        <h3>Send SMS</h3>
+        <p>SMSs were sent last time at: @Model.LastTimeSent</p>
+        <form asp-controller="Sms" asp-action="Send" method="post">
+            <button class="btn btn-danger">Send all</button>
+
+        </form>
+    </div>
+    <div class="col-md-6">
+        <h3>Manage SMS settings</h3>
+        <p>Click the button below to go to the SMS Settings panel and to edit them.</p>
+        <a class="btn btn-primary" asp-controller="Sms" asp-action="Manage">Manage</a>
+    </div>
+</div>

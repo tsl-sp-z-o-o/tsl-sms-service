@@ -1,0 +1,34 @@
+﻿@model TslWebApp.Models.EditMessageViewModel
+
+@{
+    ViewData["Title"] = "EditMessage";
+}
+
+<h1>Edit SMS Message</h1>
+<hr />
+<div class="row">
+    <div class="col-md-12">
+        <form asp-action="EditMessageConfirmation" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+            <div class="form-group">
+                <label asp-for="Content" class="control-label"></label>
+                <textarea asp-for="Content" class="form-control" maxlength="1024" wrap="soft" onkeyup="textAreaAdjust(this)"></textarea>
+                <span asp-validation-for="Content" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="PhoneNumber" class="control-label"></label>
+                <input asp-for="PhoneNumber" class="form-control" />
+                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Csv">Back to List</a>
+</div>
+

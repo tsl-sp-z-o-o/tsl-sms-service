@@ -1,0 +1,59 @@
+﻿@model IEnumerable<TslWebApp.Models.SmsMessage>
+@{
+    ViewData["Title"] = "CSV Manager";
+}
+
+<h2>Message Manager</h2>
+@await Html.PartialAsync("_MessageView")
+<div class="table">
+    <div class="row pb-4">
+        <div class="col-sm-10 col-md-8 col-lg-5">
+            <a asp-controller="Sms" asp-action="SmsImport">
+                <i class="material-icons">
+                    import_export
+                </i>
+                Import from CSV
+            </a> | 
+            <a asp-controller="Sms" asp-action="SmsExport">
+                <i class="material-icons">
+                    import_export
+                </i>Export to CSV
+            </a>
+        </div>
+    </div>
+    <div class="row table-header-row pb-3">
+        <div class="col-sm-1">
+            @Html.DisplayNameFor(model => model.Id)
+        </div>
+        <div class="col-sm-7">
+            @Html.DisplayNameFor(model => model.Content)
+        </div>
+        <div class="col-sm-2">
+            @Html.DisplayNameFor(model => model.PhoneNumber)
+        </div>
+        <div class="col-sm-2">
+            Options
+        </div>
+    </div>
+    @foreach (var item in Model)
+    {
+        <div class="row">
+            <div class="col-sm-1">
+                <p>@item.Id</p>
+            </div>
+            <div class="col-sm-7">
+                <p>@item.Content</p>
+            </div>
+            <div class="col-sm-2">
+                <p>@item.PhoneNumber</p>
+            </div>
+            <div class="col-sm-2">
+                <a asp-controller="Sms" asp-action="EditMessage" asp-route-id="@item.Id">
+                    <i class="material-icons">
+                        edit
+                    </i>
+                </a>
+            </div>
+        </div>
+    }
+</div>

@@ -1,0 +1,53 @@
+﻿@model StatusModel
+@{
+    ViewData["Title"] = "Manage";
+}
+
+<h2>Manage</h2>
+<div class="row">
+    <div class="col-md-12 pb-5">
+
+        @await Html.PartialAsync("_MessageView")
+        <h4>Modem status information</h4>
+        <form asp-controller="Sms" asp-action="EditConfiguration" method="post">
+            <div class="form-group">
+                <label class="control-label" asp-for="PortName"></label>
+                @if (Model.AccessiblePorts.Length > 0)
+                {
+                    <input class="form-control" asp-for="PortName" />
+                }
+                else
+                {
+                    <input class="form-control" asp-for="PortName" disabled/>
+                }
+            </div>
+            <div class="form-group">
+                <label class="control-label" asp-for="AccessiblePorts"></label>
+                <select class="form-control-range" asp-for="AccessiblePorts" disabled>
+                    @foreach (var portName in Model.AccessiblePorts)
+                    {
+                        <option value="@portName">@portName</option>
+                    }
+                </select>
+            </div>
+            <div class="form-group">
+                @if (Model.AccessiblePorts.Length > 0)
+                {
+                    <button class="btn btn-danger">Edit</button>
+                    <b>Changing COM port can prevent application from working properly.</b>
+                }
+                else
+                {
+                    <p><b>Cannot edit settings without any modem connected.</b></p>
+                }
+            </div>
+        </form>
+        
+    </div>
+    <div class="col-md-12">
+        <h4>Message info</h4>
+        @{ var msgsTxt = Model.MessageCount == 1 ? "message" : "messages";}
+        <p>There are @Model.MessageCount @msgsTxt in the database at the moment.</p>
+        <a class="btn btn-primary" asp-controller="Sms" asp-action="Csv">Manage</a>
+    </div>
+</div>

@@ -1,0 +1,17 @@
+﻿
+@{ 
+    var message = TempData["ReturnMessage"];
+    var type = TempData["AlertType"];
+    var alert = new Alert();
+    if (message != null && type != null)
+    {
+        alert = new Alert() { Message = message.ToString(), Type = type.ToString() };
+    }
+}
+
+@if (!string.IsNullOrEmpty(alert.Message))
+{
+    <div class="alert alert-@alert.Type">
+        <p>@alert.Message</p>
+    </div>
+}

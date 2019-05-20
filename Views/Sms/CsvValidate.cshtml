@@ -1,0 +1,59 @@
+﻿@model CsvValidateViewModel
+@{
+    ViewData["Title"] = "CsvValidate";
+}
+
+<h2>Csv Validation View</h2>
+@await Html.PartialAsync("_MessageView")
+@if (Model.Messages.Count > 0) {
+<div class="row">
+    <div class="col">
+        <p>You can see preview of data from CSV file below. Is everything okay?</p>
+        <form class="form-group" asp-controller="Sms" asp-action="CsvValidateConfirmation" method="post" asp-route-id="@Model.Id">
+            <button class="btn btn-success btn-block btn-lg" name="isValid" value="true">Yes</button>
+            <button class="btn btn-danger btn-block btn-lg" name="isValid" value="false">No</button>
+        </form>
+    </div>
+</div>
+<div class="row">
+    <div class="col-sm-6 col-md-12 col-lg-12" id="data_table">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">
+                        @Html.DisplayNameFor(model => model.Messages[0].Title)
+                    </th>
+                    <th scope="col">
+                        @Html.DisplayNameFor(model => model.Messages[0].Content)
+                    </th>
+                    <th scope="col">
+                        @Html.DisplayNameFor(model => model.Messages[0].PhoneNumber)
+                    </th>
+                    <th scope="col">
+                        @Html.DisplayNameFor(model => model.Messages[0].DriverId)
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var message in Model.Messages)
+                {
+                    <tr>
+                        <td>@message.Title</td>
+                        <td>@message.Content</td>
+                        <td>@message.PhoneNumber</td>
+                        <td>@message.DriverId</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+}
+else
+{
+    <div class="row">
+        <div class="col">
+            <p><b>No content to preview</b></p>
+        </div>
+    </div>
+}

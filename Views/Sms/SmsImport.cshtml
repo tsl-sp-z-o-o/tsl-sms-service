@@ -1,0 +1,24 @@
+﻿@model SmsImportViewModel
+@{
+    ViewData["Title"] = "SmsImport";
+}
+
+<h1>SmsImport</h1>
+
+<div class="row">
+    <div class="col-8">
+        <form asp-controller="Sms" asp-action="SmsImportConfirmation" method="post" enctype="multipart/form-data">
+            <div class="form-group">
+                <label class="col-form-label">Title</label>
+                <input class="form-control" asp-for="Title" />
+                <label class="col-form-label">Files</label>
+                <input class="form-control-file" type="file" asp-for="Files"/>
+                <label class="col-form-label">Contains headers?</label>
+                <input class="form-check-inline" asp-for="HeadersExistenceMarker"/>
+            </div>
+            <div class="form-group">
+                <button class="btn btn-primary" type="submit">Import</button>
+            </div>
+        </form>
+    </div>
+</div>
