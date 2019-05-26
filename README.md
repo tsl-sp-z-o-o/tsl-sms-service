@@ -1,2 +1,2 @@
-# tsl-sms-service
-TSL SMS Web Service
+# tsl-project
+TSL SMS Web App

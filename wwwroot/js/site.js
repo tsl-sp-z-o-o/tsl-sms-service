@@ -5,3 +5,8 @@ function textAreaAdjust(o) {
 }
 
 
+document.getElementById("cancel-sms-messages").addEventListener("click", function () {
+    connection.invoke("Cancel").catch(function (err) {
+        return console.error(err.toString());
+    });
+});

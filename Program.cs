@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace TslWebApp
 {
@@ -12,6 +13,12 @@ namespace TslWebApp
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
-                .UseStartup<Startup>();
+            .ConfigureLogging((hostingContext, logging) =>
+            {
+                logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
+                logging.AddConsole();
+                logging.AddDebug();
+            })
+            .UseStartup<Startup>();
     }
 }

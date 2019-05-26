@@ -1,23 +1,11 @@
 ﻿//All code related to SingalR JavaScript client.
+"use strict";
+
 
 const connection = new signalR.HubConnectionBuilder()
     .withUrl("/smshub")
-    .configureLogging(signalR.LogLevel.Information)
+    .configureLogging(signalR.LogLevel.Debug)
     .build();
-
-connection.on("UpdateMessage", (msgId, progress) => {
-    console.log("Updating message of id " + msgId);
-    let messageUpdateProgressBar = document.getElementById("messageSendProgress-" + msgId);
-    messageUpdateProgressBar.removeAttribute("aria-valuenow");
-    messageUpdateProgressBar.setAttribute("aria-valuenow", progress * 25);
-    messageUpdateProgressBar.setAttribute("style", "width: " + progress * 25 + "%");
-});
-
-connection.start().then(function () {
-    console.log("Connected to smshub.");
-}).catch(function (err) {
-    return console.error(err.toString());
-});
 
 async function start() {
     try {
@@ -29,6 +17,31 @@ async function start() {
     }
 };
 
+
 connection.onclose(async () => {
     await start();
+});
+
+connection.on("StartProgressCheck", (delay) => {
+    StartCheckProgress(delay);
+});
+
+connection.on("ReceiveMessagesStatus", function(sentCount){
+    let statusControl = document.getElementById("status-control");
+    statusControl.innerHTML = sentCount;
+});
+
+function StartCheckProgress(delay) {
+    window.setInterval(function () {
+        connection.invoke("GetMessagesStatusUpdate").catch(function (err) {
+            console.error(err.toString());
+        });
+    }, delay);
+}
+
+
+connection.start().then(function () {
+    console.log("Connected to smshub.");
+}).catch(function (err) {
+    return console.error(err.toString());
 });

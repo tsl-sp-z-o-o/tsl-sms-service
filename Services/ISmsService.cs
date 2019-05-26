@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TslWebApp.Models;
+using TslWebApp.Utils.Csv;
 
 namespace TslWebApp.Services
 {
@@ -11,7 +12,7 @@ namespace TslWebApp.Services
         Task<List<SmsMessage>> SendAllAsync();
         void Send(int limit, int order);
         void SendTo(List<string> numbers);
-        Task CancelAsync(int msgId);
+        Task CancelAsync();
         void ReInitComHelper(string portName);
 
         Task<bool> EditMessageAsync(EditMessageViewModel edit);
@@ -20,6 +21,8 @@ namespace TslWebApp.Services
         Task<List<SmsMessage>> ParseCsvFileAsync(string title, IFormFile file, bool headersExistanceMarker);
 
         Task AddMessagesAsync(List<SmsMessage> messages);
+
+        Task<string> GetMessagesStatus();
 
         Task Dispose();
     }

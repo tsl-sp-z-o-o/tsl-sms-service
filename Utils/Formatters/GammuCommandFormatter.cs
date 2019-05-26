@@ -1,10 +1,10 @@
-﻿namespace TslWebApp.Utils
+﻿namespace TslWebApp.Utils.Formatters
 {
     internal sealed class GammuCommandFormatter
     {
-        internal static string FormatRunSmsdCommand( string confPath)
+        internal static string FormatRunSmsdCommand(string confPath)
         {
-            return string.Format("-c \"{0}\"", confPath);
+            return string.Format("-c \"{0}\" -s", confPath);
         }
 
         internal static string FormatSendSmsCommand(string confPath, string number, string msg, int len)
@@ -15,6 +15,11 @@
         internal static string FormatStopSmsServiceCommand(string confPath)
         {
             return string.Format("-c \"{0}\" -k", confPath);
+        }
+
+        internal static string FormatSmsdMonitorCommand(string configPath)
+        {
+            return string.Format("-c \"{0}\" -L", configPath);
         }
     }
 }

@@ -8,7 +8,7 @@
 @if (Model.Messages.Count > 0) {
 <div class="row">
     <div class="col">
-        <p>You can see preview of data from CSV file below. Is everything okay?</p>
+        <p>You can see a preview of data from CSV file below. Is everything okay?</p>
         <form class="form-group" asp-controller="Sms" asp-action="CsvValidateConfirmation" method="post" asp-route-id="@Model.Id">
             <button class="btn btn-success btn-block btn-lg" name="isValid" value="true">Yes</button>
             <button class="btn btn-danger btn-block btn-lg" name="isValid" value="false">No</button>

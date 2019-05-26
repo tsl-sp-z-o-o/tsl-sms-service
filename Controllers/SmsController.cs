@@ -12,6 +12,7 @@ using System;
 using Microsoft.AspNetCore.SignalR;
 using TslWebApp.Hubs;
 using Microsoft.AspNetCore.Identity;
+using System.Diagnostics;
 
 namespace TslWebApp.Controllers
 {
@@ -81,7 +82,7 @@ namespace TslWebApp.Controllers
 
         [HttpGet]
         [Authorize(Roles = "Admin, Manager")]
-        public IActionResult SmsImport()
+        public IActionResult Import()
         {
             return View();
         }
@@ -89,11 +90,22 @@ namespace TslWebApp.Controllers
         [HttpPost]
         [Authorize(Roles = "Admin, Manager")]
         [AutoValidateAntiforgeryToken]
-        public async Task<IActionResult> SmsImportConfirmation(SmsImportViewModel smsImportViewModel)
+        public async Task<IActionResult> ImportConfirmation(SmsImportViewModel smsImportViewModel)
         {
-            var messageList = await _smsService.ParseCsvFileAsync(smsImportViewModel.Title, smsImportViewModel.Files, smsImportViewModel.HeadersExistenceMarker);
+            var messageList = new List<SmsMessage>();
+            try
+            {
+                messageList = await _smsService.ParseCsvFileAsync(smsImportViewModel.Title, smsImportViewModel.Files, smsImportViewModel.HeadersExistenceMarker);
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e.Message);
+                TempData["ReturnMessage"] = $"The following error occured: {e.Message}";
+                TempData["AlertType"] = "danger";
+                return RedirectToAction(nameof(CsvValidate));
+            }
             if (messageList.Count == 0) {
-                TempData["ReturnMessage"] = "Some error occured.";
+                TempData["ReturnMessage"] = "Unknown error occured.";
                 TempData["AlertType"] = "danger";
                 return RedirectToAction(nameof(CsvValidate));
             }
@@ -137,14 +149,14 @@ namespace TslWebApp.Controllers
                 return RedirectToAction(nameof(Csv));
             }
 
-            return RedirectToAction(nameof(SmsImport));
+            return RedirectToAction(nameof(Import));
         }
 
         [HttpGet]
         [Authorize(Roles = "Admin, Manager")]
         public async Task<IActionResult> EditMessage(int id)
         {
-            var message = (await _smsService.GetMessagesAsync(id, null))[0];//There is a formal parameter: limit = 1, 
+            var message = (await _smsService.GetMessagesAsync(id, null))[0];//There is a formal parameter: limit = 100, 
                                                                             //there will be always one message inside the list!
             var editMessageViewModel = new EditMessageViewModel()
             {
@@ -177,39 +189,43 @@ namespace TslWebApp.Controllers
         {  
             var retMsg = "SMS service started sending SMS messages.";
             var messages = new List<SmsMessage>();
+            var result = true;
             if (limit == 0)
             {
-                messages = await _smsService.SendAllAsync();
-                if (messages.Count == 0)
+                try
                 {
-                    retMsg = "Some error occured.";
+                    messages = await _smsService.SendAllAsync();
+
+                }
+                catch (InvalidOperationException ex)
+                {
+                    retMsg = ex.Message;
+                    result = false;
                 }
             }
             else
             {
-
+                //TODO: What if limit is changed.
             }
             TempData["ReturnMessage"] = retMsg;
-            TempData["AlertType"] = messages.Count > 0 ? "success" : "danger";
+            TempData["AlertType"] = result ? "success" : "danger";
             var serializedMsgList = JsonConvert.SerializeObject(messages);
             var guid = Guid.NewGuid().ToString();
             this.HttpContext.Session.Set(guid, System.Text.Encoding.UTF8.GetBytes(serializedMsgList));
-            return RedirectToAction(nameof(SmsSendProgress), new {id = guid});
+            return RedirectToAction(nameof(Progress), new {id = guid});
         }
 
         [HttpGet]
         [Authorize(Roles = "Admin, Manager")]
-        public async Task<IActionResult> SmsSendProgress(string id)
+        public async Task<IActionResult> Progress(string id)
         {
             var isListAccessible = this.HttpContext.Session.TryGetValue(id, out byte[] data);
             if (isListAccessible)
             {
                 var messages = JsonConvert.DeserializeObject<List<SmsMessage>>(System.Text.Encoding.UTF8.GetString(data));
-                messages.ForEach(async message =>
-                {
-                    await _smsHubContext.Clients.User(_userManager.GetUserId(HttpContext.User)).SendAsync("UpdateMessage", message.Id, 1);
-                });
-                this.HttpContext.Session.Remove(id);
+                //await _smsHubContext.Clients.User(_userManager.GetUserId(HttpContext.User)).SendAsync("StartProgressCheck", 1000);
+
+                //this.HttpContext.Session.Remove(id);
                 return View(messages);
             }
             TempData["ReturnMessage"] = $"Couldn't read list of messages sent.";
@@ -234,15 +250,14 @@ namespace TslWebApp.Controllers
             return RedirectToAction(nameof(Manage));
         }
 
-        
-
-        [HttpPost]
-        [AutoValidateAntiforgeryToken]
+        [HttpGet]
         [Authorize(Roles = "Admin, Manager")]
-        public IActionResult CancelSend(int id)
+        public async Task<IActionResult> Cancel()
         {
-            //TODO: Canceling logic.
-            return RedirectToAction(nameof(View));
+            await _smsService.CancelAsync();
+            TempData["ReturnMessage"] = "Sent cancel signal to gammu service.";
+            TempData["AlertType"] = "warning";
+            return RedirectToAction(nameof(Progress));
         }
     }
 }

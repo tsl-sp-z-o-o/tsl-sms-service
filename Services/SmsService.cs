@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -24,17 +25,21 @@ namespace TslWebApp.Services
         private readonly IConfiguration _configuration;
         private readonly ComHelper _comHelper;
         private readonly IGammuService _gammuService;
+        private readonly ILogger _logger;
+
         //private static bool CanWrite = false;
 
         public SmsService(MainDbContext mainDbContext, 
                           IConfiguration configuration,
                           IComService comService,
-                          IGammuService gammuService)
+                          IGammuService gammuService,
+                          ILogger<ISmsService> logger)
         {
             _mainDbContext = mainDbContext;
             _configuration = configuration;
             _comHelper = (ComHelper)comService;
             _gammuService = gammuService;
+            _logger = logger;
         }
 
         public async Task Init()
@@ -70,9 +75,7 @@ namespace TslWebApp.Services
             var phoneNumber = _configuration.GetSection("GsmSettings")["PhoneNumber"];
             var regionPrefix = _configuration.GetSection("GsmSettings")["RegionPrefix"];
 
-            var statusMessage = await _comHelper.ExecuteAtCommandAsync(SmsConstants.TestCmd);
-
-            if (!statusMessage.Contains("Error"))
+            if (true)//temporarily
             {
                 return await Task<List<SmsMessage>>.Factory.StartNew(() =>
                 {
@@ -88,7 +91,7 @@ namespace TslWebApp.Services
             }
             else
             {
-                return new List<SmsMessage>();
+                throw new InvalidOperationException("There was an error while running");
             }
         }
 
@@ -97,9 +100,9 @@ namespace TslWebApp.Services
             throw new NotImplementedException();
         }
 
-        public async Task CancelAsync(int msgId)
+        public async Task CancelAsync()
         {
-
+           await _gammuService.PurgeGammuProcesses();
         }
 
         public async Task<List<SmsMessage>> GetMessagesAsync(int? mid, int? driverId, int limit = 100)
@@ -160,20 +163,32 @@ namespace TslWebApp.Services
                 _ = new List<SmsMessage>();
                 var csvDocument = await csvParser.Parse(targetCsvPath, headersExistanceMarker);
                 List<SmsMessage> messages;
-                if (headersExistanceMarker)
+                try
                 {
-                    messages = ProcessCsvWithHeaders(csvDocument);
+                    if (headersExistanceMarker)
+                    {
+                        messages = ProcessCsvWithHeaders(csvDocument);
+                    }
+                    else
+                    {
+                        messages = ProcessCsvWithoutHeaders(csvDocument);
+                    }
+                    return messages;
                 }
-                else
+                catch (ArgumentException ex)
                 {
-                    messages = ProcessCsvWithoutHeaders(csvDocument);
+                    throw ex;
                 }
-                return messages;
+                catch (FormatException ex)
+                {
+                    throw ex;
+                }
+                
             }
             else
             {
                 Debug.WriteLine("Couldn't read from input file stream or it was 0 length stream!");
-                return new List<SmsMessage>();
+                throw new ArgumentException("Non-readable stream provided in IFileForm object.");
             }
         }
 
@@ -193,7 +208,27 @@ namespace TslWebApp.Services
             }
             else
             {
-                Debug.WriteLine("Noo messages available.");
+                Debug.WriteLine("No messages available.");
+            }
+        }
+
+        public async Task<string> GetMessagesStatus()
+        {
+            try
+            {
+
+                var dataString = await _gammuService.CheckSmsStatus();
+                var dataStrings = dataString.Split("-");
+                var resultString = "";
+                var document = await ParserFactory.BuildCsvParser().ParseLine(dataStrings[1]);
+                //resultString = document.Cols[0].Cells[0].Value;
+
+                return resultString;
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e.Message);
+                throw e;
             }
         }
 
@@ -207,11 +242,19 @@ namespace TslWebApp.Services
             if (cols.Count == CsvFormatRules.DataColCount)
             {
                 int rowPtr = 0;
-                Process(ref smsMessageList, ref rowPtr, ref cols);
+                try
+                {
+                    Process(ref smsMessageList, ref rowPtr, ref cols);
+                }
+                catch (ArgumentException ex)
+                {
+                    throw ex;
+                }
             }
             else
             {
                 Debug.WriteLine("Columns' count doesn't match column count in table.");
+                throw new FormatException("The csv file has the unexpected format.");
             }
             return smsMessageList;
         }
@@ -225,11 +268,19 @@ namespace TslWebApp.Services
             if (cols.Count == CsvFormatRules.DataColCount)
             {   
                 int rowPtr = 1;
-                Process(ref smsMessageList, ref rowPtr, ref cols);
+                try
+                {
+                    Process(ref smsMessageList, ref rowPtr, ref cols);
+                }
+                catch (ArgumentException ex)
+                {
+                    throw ex;
+                }
             }
             else
             {
                 Debug.WriteLine("Headers' count doesn't match column count in table.");
+                throw new FormatException("The csv file has the unexpected format.");
             }
             return smsMessageList;
         }
@@ -243,12 +294,17 @@ namespace TslWebApp.Services
                 {
                     var currentColumn = cols[i - CsvFormatRules.StartOffset];
                     var cell = currentColumn.Cells[rowPtr];
-
-                    var value = PrepareCellValue(cell.Value, smsMessage.GetType().GetProperties()[i]);
-
-                    smsMessage.GetType().GetProperties()[i].SetValue(smsMessage, value);
+                    try
+                    {
+                        var value = PrepareCellValue(cell.Value, smsMessage.GetType().GetProperties()[i]);
+                        smsMessage.GetType().GetProperties()[i].SetValue(smsMessage, value);
+                    }
+                    catch (ArgumentException ex)
+                    {
+                        throw ex;
+                    }
+                   
                 }
-
                 smsMessageList.Add(smsMessage);
             }
         }
@@ -265,7 +321,7 @@ namespace TslWebApp.Services
                 else
                 {
                     //Handle the error.
-                    return value;
+                    throw new ArgumentException("The string value should represent an actual string or antoher primitve value.");
                 }
             }
             return value;
@@ -300,13 +356,6 @@ namespace TslWebApp.Services
             //_comHelper.ReInit();
         }
 
-
-
-        private async Task AddMessagesToDatabase(List<SmsMessage> messages)
-        {
-
-        }
-
         private void PrepareCsvFormatRules()
         {
             var mockMessage = new SmsMessage();
@@ -318,6 +367,7 @@ namespace TslWebApp.Services
                 .Contains(new CsvDataColumnAttribute()))
                 .Count;
         }
+        
         #endregion
     }
     }

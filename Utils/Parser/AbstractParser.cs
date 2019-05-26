@@ -6,5 +6,7 @@ namespace TslWebApp.Utils.Parser
     {
         public abstract ParserType ParserType { get; }
         public abstract Task<T> Parse(string absoluteFilePath, bool containsHeaders);
+
+        public abstract Task<T> ParseLine(string line);
     }
 }

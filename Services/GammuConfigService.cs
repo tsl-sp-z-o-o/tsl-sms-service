@@ -76,6 +76,7 @@ namespace TslWebApp.Services
                 }
                 catch (Exception e)
                 {
+                    Debug.WriteLine(e.Message);
                     return false;
                 }
                 return true;

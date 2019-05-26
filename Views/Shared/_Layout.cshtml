@@ -65,6 +65,7 @@
         </nav>
     </header>
     <div class="container">
+        @await  Html.PartialAsync("_CookieConsentPartial")
         <main role="main" class="pb-3 pt-5">
             @RenderBody()
         </main>
@@ -72,7 +73,7 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2019 - TslWebApp - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            &copy; 2019 - Julia
         </div>
     </footer>
 
@@ -94,9 +95,8 @@
                 integrity="sha256-E/V4cWE4qvAeO5MOhjtGtqDzPndRO1LBk8lJ/PR7CA4=">
         </script>
     </environment>
-    <script src="~/lib/signalr/signalr.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    <script src="~/js/smsClient.js" asp-append-version="true"></script>
+    
+    <script src="~/js/site.js"></script>
     @RenderSection("Scripts", required: false)
 </body>
 </html>

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TslWebApp.Utils
+namespace TslWebApp.Utils.Formatters
 {
     internal sealed class AtCommandFormatter
     {
@@ -11,7 +11,8 @@ namespace TslWebApp.Utils
 
         internal static string FormatSetModeCommand(int mode = 1)
         {
-            if (mode == 1 || mode == 0) {
+            if (mode == 1 || mode == 0)
+            {
                 return string.Format(SmsConstants.ModeInst, mode);
             }
             else
