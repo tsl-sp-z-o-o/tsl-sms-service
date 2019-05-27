@@ -1,0 +1,94 @@
+﻿@model ListViewModel
+@{
+    ViewData["Title"] = "Message Manager";
+    var va = ViewData["ActionType"];
+}
+
+<h2>Message Manager</h2>
+@if (va.ToString().Equals("delete"))
+{
+    <p class="alert-danger">This action is <b>permanent</b> and cannot be undone.</p>
+    <form asp-controller="Sms" asp-action="DeleteMessages" method="post">
+        <div class="col pb-4">
+            <button class="btn btn-danger btn-lg" type="submit">Delete selected</button>
+            <a class="btn btn-primary btn-lg" asp-controller="Sms" asp-action="Messages" asp-route-av="list">Cancel</a>
+            <button class="btn btn-primary btn-lg" id="select-all-button" type="button">Select all</button>
+        </div>
+        <select id="messages-list" asp-for="DeleteMessagesIds" class="form-control pb-4" style="min-height: 500px;">
+            @foreach (var item in Model.Messages)
+            {
+                <option value="@item.Id">@item.Title</option>
+            }
+        </select>
+    </form>
+}
+else
+{
+<div class="table">
+    <div class="row table-header-row pb-3">
+        <div class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Messages.ElementAt(0).DriverId)
+        </div>
+        <div class="col-sm-6">
+            @Html.DisplayNameFor(model => model.Messages.ElementAt(0).Content)
+        </div>
+        <div class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Messages.ElementAt(0).PhoneNumber)
+        </div>
+        <div class="col-sm-2">
+            Options
+        </div>
+    </div>
+
+
+    @if (va.ToString().Equals("list"))
+    {
+        @foreach (var item in Model.Messages)
+        {
+            <div class="row">
+
+                <div class="col-sm-2">
+                    <p>@item.Id</p>
+                </div>
+                <div class="col-sm-6">
+                    <p>@item.Content</p>
+                </div>
+                <div class="col-sm-2">
+                    <p>@item.PhoneNumber</p>
+                </div>
+                <div class="col-sm-2">
+                    <a asp-controller="Sms" asp-action="EditMessage" asp-route-id="@item.Id">
+                        <i class="material-icons">
+                            edit
+                        </i>
+                    </a>
+                </div>
+            </div>
+        }
+    }
+    <div class="menu pmd-floating-action fab" role="navigation">
+        <a asp-action="Import" class="pmd-floating-action-btn btn btn-sm pmd-btn-fab pmd-btn-raised pmd-ripple-effect btn-default" data-title="Import">
+            <span class="pmd-floating-hidden">Import</span>
+            <i class="material-icons">import_export</i>
+        </a>
+        <a asp-action="Export" class="pmd-floating-action-btn btn btn-sm pmd-btn-fab pmd-btn-raised pmd-ripple-effect btn-default" data-title="Export">
+            <span class="pmd-floating-hidden">Export</span>
+            <i class="material-icons">import_export</i>
+        </a>
+        <a asp-action="DeleteMessages" asp-route-av="delete" class="pmd-floating-action-btn btn btn-sm pmd-btn-fab pmd-btn-raised pmd-ripple-effect btn-default" data-title="Export">
+            <span class="pmd-floating-hidden">Export</span>
+            <i class="material-icons">delete</i>
+        </a>
+        <a class="pmd-floating-action-btn btn pmd-btn-fab pmd-btn-raised pmd-ripple-effect btn-primary" data-title="Menu">
+            <span class="pmd-floating-hidden">Primary</span>
+            <i class="material-icons">
+                <i class="material-icons">
+                    menu
+                </i>
+            </i>
+        </a>
+    </div>
+</div>
+
+    
+}

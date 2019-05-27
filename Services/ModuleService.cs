@@ -37,7 +37,7 @@ namespace TslWebApp.Services
             }
         }
 
-        public async Task ExecuteModule(string moduleName, string args = null)
+        public async Task ExecuteModule(string moduleName, string[] args = null)
         {
             await Task.Factory.StartNew(() =>
             {
@@ -50,8 +50,13 @@ namespace TslWebApp.Services
                     try
                     {
                         var moduleObject = registeredModuleStack.First(module => module.ModuleName.Equals(moduleName));
-                        moduleObject.ArgumentsString = args;
-                        _moduleExecutor.Execute(moduleObject);
+                        if (args == null || args.Length == 0) {
+                            if (!string.IsNullOrEmpty(moduleObject.ArgumentsString))
+                            {
+                                Debug.WriteLine("Arguments needed, argument string is given.");
+                            }
+                        }
+                        _moduleExecutor.Execute(moduleObject, args);
                     }
                     catch (Exception e)
                     {
@@ -137,7 +142,7 @@ namespace TslWebApp.Services
                 _registeredModules = registeredModules;
             }
 
-            internal void Execute(Module module)
+            internal void Execute(Module module, string[] args)
             {
                 try
                 {
@@ -146,8 +151,8 @@ namespace TslWebApp.Services
                         var prc = new Process();
 
                         prc.StartInfo.FileName = DetermineExecutable(module);
-                        prc.StartInfo.Arguments = string.IsNullOrEmpty(module.ArgumentsString) ? DetermineArgumentsString(module) : module.ArgumentsString;
-                        prc.StartInfo.WorkingDirectory = "E:\\gammu\\";//replace from config
+                        prc.StartInfo.Arguments = CreateArgString(module, args);
+                        prc.StartInfo.WorkingDirectory = _configuration.GetSection("GammuSettings")["WorkingDirectory"];
                         prc.StartInfo.RedirectStandardOutput = true;
                         prc.StartInfo.RedirectStandardError = true;
                         prc.StartInfo.UseShellExecute = false;
@@ -171,10 +176,13 @@ namespace TslWebApp.Services
                         }
 
                         prc.Start();
-                        //prc.WaitForExit();
+                        
                         prc.BeginOutputReadLine();
                         prc.BeginErrorReadLine();
 
+                        _processes.RemoveAll(startedProcess => 
+                                             startedProcess.StartInfo.FileName
+                                             .Equals(prc.StartInfo.FileName));
                         _processes.Add(prc);
                     });
                     
@@ -186,14 +194,42 @@ namespace TslWebApp.Services
                 }
             }
 
-            private string DetermineArgumentsString(Module module)
+            private string CreateArgString(Module module, string[] args)
             {
-                switch (module.Type)
+                var argString = module.ArgumentsString;
+
+                if (!string.IsNullOrEmpty(argString))
                 {
-                    case ModuleType.PythonModule:
-                        return string.Format("\"{1}\" -c=\"{0}\" s", _configuration.GetSection("GammuSettings")["ConfPath"], module.ModulePhysicalPath);
-                    default:
-                        throw new InvalidOperationException("Cannot determine arguments string - unknown module type.");
+                    try
+                    {
+                       
+                        switch (module.Type)
+                        {
+                            case ModuleType.PythonModule:
+                                var newArg = new string[args.Length+1];
+                                newArg[0] = module.ModulePhysicalPath;
+                                for(int i = 1; i < newArg.Length; i++)
+                                {
+                                    newArg[i] = args[i - 1];
+                                }
+                                args = newArg;
+                                break;
+                            case ModuleType.SystemModule:
+                                break;
+                        }
+                        var str = string.Format(argString, args);
+                        Debug.WriteLine(str);
+                        return str;
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.WriteLine(e.Message);
+                        throw e;
+                    }
+                }
+                else
+                {
+                    throw new ArgumentNullException("Arguments cannot be null.");
                 }
             }
 
@@ -277,7 +313,7 @@ namespace TslWebApp.Services
 
             private void ExitedHandler(object sender, EventArgs e)
             {
-                Debug.WriteLine(sender);
+                Debug.WriteLine("Util process exited.");
             }
         }
     }

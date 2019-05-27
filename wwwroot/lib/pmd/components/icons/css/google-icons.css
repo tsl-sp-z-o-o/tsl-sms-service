@@ -1,0 +1,28 @@
+/*!
+ * Propeller v1.3.1 (http://propeller.in): google-icons.css
+ * Copyright 2016-2018 Digicorp, Inc.
+ * Licensed under MIT (http://propeller.in/LICENSE)
+ */
+.material-icons.pmd-xs, .material-icons.md-18 {
+  font-size: 18px; }
+
+.material-icons.pmd-sm, .material-icons.md-24 {
+  font-size: 24px; }
+
+.material-icons.pmd-md, .material-icons.md-36 {
+  font-size: 36px; }
+
+.material-icons.pmd-lg, .material-icons.md-48 {
+  font-size: 48px; }
+
+.material-icons.md-dark {
+  color: #333333; }
+
+.material-icons.md-dark.md-inactive {
+  color: rgba(51, 51, 51, 0.25); }
+
+.material-icons.md-light {
+  color: #fff; }
+
+.material-icons.md-light.md-inactive {
+  color: rgba(255, 255, 255, 0.25); }

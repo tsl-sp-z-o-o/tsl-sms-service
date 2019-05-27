@@ -114,7 +114,7 @@ namespace TslWebApp.Utils
             sp.Open();
         }
 
-        internal async Task<string> ExecuteAtCommandAsync(string command, int timeout = 400)
+        internal async Task<string> ExecuteAtCommandAsync(string command)
         {
             string message = "Error";
             await Task.Factory.StartNew(() =>

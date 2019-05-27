@@ -21,5 +21,10 @@ namespace TslWebApp.Models
         [StringLength(9, ErrorMessage = "Phone number must be 9 characters length.", MinimumLength = 9)]
         public string PhoneNumber { get; set; }
 
+        [Required]
+        [Display(Name = "Driver id", Description = "Driver's identifier in the system.")]
+        [Editable(true)]
+        public int DriverId { get; set; }
+
     }
 }

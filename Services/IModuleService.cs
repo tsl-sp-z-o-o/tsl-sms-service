@@ -7,7 +7,7 @@ namespace TslWebApp.Services
     {
         void Init(Stack<Module> modules);
 
-        Task ExecuteModule(string moduleName, string args);
+        Task ExecuteModule(string moduleName, string[] args);
         void Dispose();
     }
 }

@@ -10,20 +10,24 @@ namespace TslWebApp.Models
 
         [Required]
         [CsvDataColumn]
+        [Display(Description = "The person identity.")]
         public string Title { get; set; }
 
         [Required]
         [StringLength(maximumLength:1024)]
         [CsvDataColumn]
+        [Display(Name = "SMS Text", Description = "The SMS content text.")]
         public string Content { get; set; }
 
         [Required]
         [Phone]
         [CsvDataColumn]
+        [Display(Name = "Phone number", Description = "The target phone number.")]
         public string PhoneNumber { get; set; }
 
         [Required]
         [CsvDataColumn]
+        [Display(Name = "Diriver's id", Description = "The identifier used in whole system to identify driver.")]
         public int DriverId { get; set; }
     }
 }

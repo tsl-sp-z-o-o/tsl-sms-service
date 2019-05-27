@@ -67,14 +67,11 @@ namespace TslWebApp.Services
 
         public void Send(int limit, int order = 0)
         {
-            
+            //not used now.
         }
 
         public async Task<List<SmsMessage>> SendAllAsync()
         {
-            var phoneNumber = _configuration.GetSection("GsmSettings")["PhoneNumber"];
-            var regionPrefix = _configuration.GetSection("GsmSettings")["RegionPrefix"];
-
             if (true)//temporarily
             {
                 return await Task<List<SmsMessage>>.Factory.StartNew(() =>
@@ -185,11 +182,8 @@ namespace TslWebApp.Services
                 }
                 
             }
-            else
-            {
-                Debug.WriteLine("Couldn't read from input file stream or it was 0 length stream!");
-                throw new ArgumentException("Non-readable stream provided in IFileForm object.");
-            }
+            Debug.WriteLine("Couldn't read from input file stream or it was 0 length stream!");
+            throw new ArgumentException("Non-readable stream provided in IFileForm object.");
         }
 
         public async Task AddMessagesAsync(List<SmsMessage> messages)
@@ -198,7 +192,18 @@ namespace TslWebApp.Services
             {
                 try
                 {
-                    _mainDbContext.Messages.AddRange(messages);
+                    foreach (var message in messages)
+                    {
+                        if (messages.Where(messagePredicate => message.PhoneNumber == messagePredicate.PhoneNumber).ElementAt(0) != null)
+                        {
+                            _mainDbContext.Messages.Update(message);
+                        }
+                        else
+                        {
+                            await _mainDbContext.Messages.AddAsync(message);
+                        }
+                    }
+                    
                     await _mainDbContext.SaveChangesAsync();
                 }
                 catch (Exception e)
@@ -212,24 +217,36 @@ namespace TslWebApp.Services
             }
         }
 
-        public async Task<string> GetMessagesStatus()
+        public async Task<Tuple<string, string>> GetStatus()
         {
             try
             {
-
                 var dataString = await _gammuService.CheckSmsStatus();
-                var dataStrings = dataString.Split("-");
-                var resultString = "";
-                var document = await ParserFactory.BuildCsvParser().ParseLine(dataStrings[1]);
-                //resultString = document.Cols[0].Cells[0].Value;
-
-                return resultString;
+                
+                var messageCount = "";
+                var signalStrength = "";
+                if (!string.IsNullOrEmpty(dataString)) {
+                    var dataStrings = dataString.Split("-");
+                    
+                    var document = await ParserFactory.BuildCsvParser().ParseLine(dataStrings[1]);
+                    messageCount = document.Cols[0].Cells[0].Value;
+                    signalStrength = document.Cols[0].Cells[2].Value;
+                }
+                return new Tuple<string,string>(messageCount, signalStrength);
             }
             catch (Exception e)
             {
                 Debug.WriteLine(e.Message);
                 throw e;
             }
+        }
+
+        public async Task DeleteSmsMessage(int id)
+        {
+            var messageModel = _mainDbContext.Messages.First(message => message.Id == id);
+
+            _mainDbContext.Remove(messageModel);
+            await _mainDbContext.SaveChangesAsync();
         }
 
         #region HelperMethods
@@ -320,7 +337,6 @@ namespace TslWebApp.Services
                 }
                 else
                 {
-                    //Handle the error.
                     throw new ArgumentException("The string value should represent an actual string or antoher primitve value.");
                 }
             }
@@ -339,21 +355,13 @@ namespace TslWebApp.Services
             {
                 var input = ((ComHelper)sender).Answer.Trim();
                 Debug.WriteLineIf(!string.IsNullOrEmpty(((ComHelper)sender).Answer), "Echo: " + input);
-                if (!string.IsNullOrEmpty(input)
-                 && !input.Contains("ERROR") 
-                 && !input.Contains("^BOOT")
-                 && (input.Contains("OK") || input.Contains(">") || input.Contains("\r\n"))
-                 )
-                {
-                    Debug.WriteLineIf(!string.IsNullOrEmpty(((ComHelper)sender).Answer), "Answer: " + ((ComHelper)sender).Answer);
-                }
             }
         }
 
-        public void ReInitComHelper(string portName)
+        public void ReInitSmsd(string portName)
         {
             ComHelper.PortName = portName;
-            //_comHelper.ReInit();
+            _gammuService.Init().Wait();
         }
 
         private void PrepareCsvFormatRules()
@@ -367,7 +375,6 @@ namespace TslWebApp.Services
                 .Contains(new CsvDataColumnAttribute()))
                 .Count;
         }
-        
         #endregion
     }
     }

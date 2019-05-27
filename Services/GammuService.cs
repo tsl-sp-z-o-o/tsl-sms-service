@@ -1,9 +1,4 @@
 ﻿using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Threading;
 using System.Threading.Tasks;
 using TslWebApp.Models;
 using TslWebApp.Utils.Formatters;
@@ -37,17 +32,18 @@ namespace TslWebApp.Services
             await _gammuConfigService.PutValue("smsd", "device", GammuConfig.Device);
             await _gammuConfigService.Save();
 
-            var stopSmsServiceCmd = GammuCommandFormatter.FormatStopSmsServiceCommand(configurationPath);
-            await _moduleService.ExecuteModule("GammuSmsd", stopSmsServiceCmd);
-            await _moduleService.ExecuteModule("run-smsd");
+            await _moduleService.ExecuteModule("GammuSmsd", new string[] { configurationPath, "-k" });
+            await _moduleService.ExecuteModule("run-smsd", new string[] { configurationPath });
         }
 
         public async Task SendSmsAsync(SmsMessage smsMessage)
         {
-                await _moduleService.ExecuteModule("GammuSmsdInjector", GammuCommandFormatter.FormatSendSmsCommand(configurationPath, 
-                                                    smsMessage.PhoneNumber, 
-                                                    smsMessage.Content, 
-                                                    smsMessage.Content.Length));
+                await _moduleService.ExecuteModule("GammuSmsdInjector", new string[] {
+                                                    configurationPath,
+                                                    smsMessage.PhoneNumber,
+                                                    smsMessage.Content,
+                                                    smsMessage.Content.Length.ToString()
+                });
         }
 
         public async Task Dispose()
@@ -63,9 +59,8 @@ namespace TslWebApp.Services
 
         public async Task<string> CheckSmsStatus()
         {
-
-            await _moduleService.ExecuteModule("smsd-checker");
-            return _moduleService.GetStatus();
+            await _moduleService.ExecuteModule("smsd-checker", new string[] { configurationPath, "" });
+            return _moduleService.HasOutputChanged ? _moduleService.GetStatus() : "";
         }
 
         public async Task<bool> IsGammuAliveAsync()

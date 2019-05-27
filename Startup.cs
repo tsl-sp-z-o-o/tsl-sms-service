@@ -82,6 +82,7 @@ namespace TslWebApp
             IServiceProvider serviceProvider,
             IApplicationLifetime applicationLifetime)
         {
+            this.serviceProvider = serviceProvider;
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -115,42 +116,42 @@ namespace TslWebApp
                     name: "default",
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
+
             var moduleService = (ModuleService)serviceProvider.GetRequiredService(typeof(IModuleService));
             var modules = LoadModules().Result;
 
             moduleService.Init(modules);
-
             var smsService = (SmsService)serviceProvider.GetRequiredService(typeof(ISmsService));
             smsService.Init().Wait();
-            this.serviceProvider = serviceProvider;
 
             CreateRoles(serviceProvider).Wait();
         }
 
         private void OnStarting()
         {
-            //WipeGammuProcesses().Wait();
+            WipeUtilProcesses().Wait();
         }
 
         private void OnShutdowned()
         {
-            Task.Factory.StartNew(() => WipeGammuProcesses());
+            Task.Factory.StartNew(() => WipeUtilProcesses());
         }
 
-        public async Task WipeGammuProcesses()
+        public static async Task WipeUtilProcesses()
         {
             var processList = Process.GetProcesses().ToList();
 
             await Task.Factory.StartNew(() =>
             {
-                //TODO: Determine how to detect all processes needed to be killed.
                 var gammuProcessList = processList.FindAll(proc => proc.ProcessName.Contains("gammu-") 
                                                         || proc.ProcessName.Contains("python"));
                 gammuProcessList.ForEach(gprocess =>
                 {
                     try
                     {
-                        gprocess.Kill();
+                        if (gprocess.StartTime.AddSeconds(10) < DateTime.Now) {
+                            gprocess.Kill();
+                        }
                     }
                     catch
                     { }
@@ -160,7 +161,7 @@ namespace TslWebApp
 
         private void OnShutdown()
         {
-            Task.Factory.StartNew(() => WipeGammuProcesses());               
+            Task.Factory.StartNew(() => WipeUtilProcesses());               
         }
 
         private async Task<Stack<Module>> LoadModules()

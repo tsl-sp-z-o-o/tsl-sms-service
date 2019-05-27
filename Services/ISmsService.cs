@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TslWebApp.Models;
@@ -13,7 +14,7 @@ namespace TslWebApp.Services
         void Send(int limit, int order);
         void SendTo(List<string> numbers);
         Task CancelAsync();
-        void ReInitComHelper(string portName);
+        void ReInitSmsd(string portName);
 
         Task<bool> EditMessageAsync(EditMessageViewModel edit);
         Task<List<SmsMessage>> GetMessagesAsync(int? mid, int? driverId, int limit = 1);
@@ -22,7 +23,9 @@ namespace TslWebApp.Services
 
         Task AddMessagesAsync(List<SmsMessage> messages);
 
-        Task<string> GetMessagesStatus();
+        Task<Tuple<string,string>> GetStatus();
+
+        Task DeleteSmsMessage(int id);
 
         Task Dispose();
     }

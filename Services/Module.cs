@@ -17,20 +17,7 @@ namespace TslWebApp.Services
 
         public string ArgumentsString
         {
-            get
-            {
-                return args;
-            }
-            set
-            {
-                args = value;
-                FormatArgs();
-            }
-        }
-
-        private void FormatArgs()
-        {
-            
+            get; set;
         }
 
         public enum ModuleType

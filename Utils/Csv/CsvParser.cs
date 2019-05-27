@@ -65,18 +65,17 @@ namespace TslWebApp.Utils
                 var cols = new List<CsvColumn<CsvColCell<string>>>();
                         if (line.Contains(";"))
                         {
-                            //var colCount = line.Split(";").Length;
                             var column = new CsvColumn<CsvColCell<string>>("Header",
-                                                                              new List<CsvColCell<string>>());
+                                                                            new List<CsvColCell<string>>());
                             cols.Add(column);
                             var row = line.Split(';');
                                 for (int i = 0; i < row.Length; i++)
                                 {
-                                    cols[i].Cells.Add(new CsvColCell<string>()
+                                    cols[0].Cells.Add(new CsvColCell<string>()
                                     {
-                                        Index = cols[i].Length + 1,
+                                        Index = cols[0].Length + 1,
                                         Value = row[i],
-                                        ParentColumn = cols[i]
+                                        ParentColumn = cols[0]
                                     });
                                 }
                         }

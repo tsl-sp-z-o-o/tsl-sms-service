@@ -27,13 +27,21 @@ namespace TslWebApp.Controllers
             {
                 TempData["ReturnMessage"] = $"No user of id {id}";
                 TempData["AlertType"] = "danger";
+                return RedirectToAction("Index", "Home");
             }
+            else
+            {
+                TempData["ReturnMessage"] = "Logged in successfully.";
+                TempData["AlertType"] = "success";
+            }
+
             var userModel = new UserModel()
             {
                 Email = user.Email,
                 Id = id,
                 PhoneNumber = user.PhoneNumber
             };
+
             return View(userModel);
         }
 
@@ -49,31 +57,31 @@ namespace TslWebApp.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Login(UserModel userModel)
         {
-            var user = await _userManager.FindByEmailAsync(userModel.Email);
-            if (user != null)
-            {
-                var passwordSingInResult = await _signInManager.PasswordSignInAsync(user, userModel.Password, false, false);
-                if (passwordSingInResult.Succeeded)
+            if (userModel != null) {
+                var user = await _userManager.FindByEmailAsync(userModel.Email);
+                if (user != null)
                 {
-                    TempData["ReturnMessage"] = "Logged in successfully.";
-                    TempData["AlertType"] = "success";
-                    return RedirectToAction(nameof(Index), new { id = user.Id });
+                    var passwordSingInResult = await _signInManager.PasswordSignInAsync(user, userModel.Password, false, false);
+                    if (passwordSingInResult.Succeeded)
+                    {
+                        return RedirectToAction(nameof(Index), new { id = user.Id });
+                    }
                 }
+                TempData["ReturnMessage"] = "Couldn't log in.";
+                TempData["AlertType"] = "danger";
             }
-            TempData["ReturnMessage"] = "Couldn't log in.";
-            TempData["AlertType"] = "danger";
             return View(nameof(Login));
         }
 
         [HttpPost]
         [AutoValidateAntiforgeryToken]
-        [AllowAnonymous]
+        [Authorize]
         public async Task<IActionResult> Logout()
         {
             await _signInManager.SignOutAsync();
             TempData["ReturnMessage"] = "Signed out successfully.";
             TempData["AlertType"] = "success";
-            return RedirectToAction("Home","Index");
+            return RedirectToAction("Index","Home");
         }
 
         [HttpPost]

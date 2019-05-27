@@ -5,15 +5,16 @@
 
 <h1>Login</h1>
 <div class="container">
-    @await Html.PartialAsync("_MessageView")
     <div class="row">
         <div class="col-sm-10">
             <div class="form-group">
                 <form asp-controller="User" asp-action="Login" method="post">
-                    <label>Email</label>
-                    <input class="form-control" type="text" asp-for="Email" />
-                    <label>Password</label>
-                    <input class="form-control" type="password" asp-for="Password" />
+                    <label asp-for="Email"></label>
+                    <input class="form-control" type="text" asp-for="Email" required />
+                    <span asp-validation-for="Email"></span>
+                    <label asp-for="Password"></label>
+                    <input class="form-control" type="password" asp-for="Password" required />
+                    <span asp-validation-for="Password"></span>
                     <br>
                     <button class="btn btn-primary" type="submit">Log in</button>
                 </form>

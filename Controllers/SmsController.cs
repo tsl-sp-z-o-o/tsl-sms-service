@@ -20,18 +20,18 @@ namespace TslWebApp.Controllers
     {
         private readonly SmsService _smsService;
         private readonly IHubContext<SmsHub> _smsHubContext;
-        private readonly UserManager<User> _userManager;
         private readonly IGammuConfigService _gammuConfigService;
+        private readonly UserManager<User> _userManager;
 
         public SmsController(ISmsService smsService, 
                              IHubContext<SmsHub> smsHubContext,
-                             UserManager<User> userManager,
-                             IGammuConfigService gammuConfigService)
+                             IGammuConfigService gammuConfigService,
+                             UserManager<User> userManager)
         {
             _smsService = (SmsService)smsService;
             _smsHubContext = smsHubContext;
-            _userManager = userManager;
             _gammuConfigService = gammuConfigService;
+            _userManager = userManager;
         }
 
         [HttpGet]
@@ -74,10 +74,39 @@ namespace TslWebApp.Controllers
 
         [HttpGet]
         [Authorize(Roles = "Admin, Manager")]
-        public async Task<IActionResult> Csv()
+        public async Task<IActionResult> Messages(string av = "list")
         {
             var messageList = await _smsService.GetMessagesAsync(null, null);
-            return View(messageList);
+            ViewData["ActionType"] = av;
+            var listViewModel = new ListViewModel();
+            listViewModel.Messages = messageList;
+            return View(listViewModel);
+        }
+
+        [HttpPost]
+        [AutoValidateAntiforgeryToken]
+        [Authorize(Roles = "Admin, Manager")]
+        public IActionResult DeleteMessages(ListViewModel listViewModel)
+        {
+
+            var ids = listViewModel.DeleteMessagesIds;
+            var message = "Deleted successfully.";
+            try
+            {
+                ids.ForEach(id =>
+                {
+                    _smsService.DeleteSmsMessage(id).Wait();
+                });
+            }
+            catch (Exception e)
+            {
+                message = $"Couldn't delete because of the following error: {e.Message}";
+                TempData["ReturnMessage"] = message;
+                TempData["AlertType"] = "danger";
+            }
+            TempData["ReturnMessage"] = message;
+            TempData["AlertType"] = "success";
+            return RedirectToAction(nameof(Messages));
         }
 
         [HttpGet]
@@ -146,7 +175,7 @@ namespace TslWebApp.Controllers
                     await _smsService.AddMessagesAsync(messageList);
                 }
                 
-                return RedirectToAction(nameof(Csv));
+                return RedirectToAction(nameof(Messages));
             }
 
             return RedirectToAction(nameof(Import));
@@ -179,7 +208,7 @@ namespace TslWebApp.Controllers
             var isModified = await _smsService.EditMessageAsync(editMessageViewModel);
             TempData["ReturnMessage"] = isModified ? "The SMS message has been updated successfully." : $"The SMS message of id {editMessageViewModel.Id} couldn't be updated.";
             TempData["AlertType"] = isModified ? "success" : "danger";
-            return RedirectToAction(nameof(Csv));
+            return RedirectToAction(nameof(Messages));
         }
 
         [HttpPost]
@@ -194,7 +223,7 @@ namespace TslWebApp.Controllers
             {
                 try
                 {
-                    messages = await _smsService.SendAllAsync();
+                    //messages = await _smsService.SendAllAsync();
 
                 }
                 catch (InvalidOperationException ex)
@@ -217,15 +246,12 @@ namespace TslWebApp.Controllers
 
         [HttpGet]
         [Authorize(Roles = "Admin, Manager")]
-        public async Task<IActionResult> Progress(string id)
+        public IActionResult Progress(string id)
         {
             var isListAccessible = this.HttpContext.Session.TryGetValue(id, out byte[] data);
             if (isListAccessible)
             {
                 var messages = JsonConvert.DeserializeObject<List<SmsMessage>>(System.Text.Encoding.UTF8.GetString(data));
-                //await _smsHubContext.Clients.User(_userManager.GetUserId(HttpContext.User)).SendAsync("StartProgressCheck", 1000);
-
-                //this.HttpContext.Session.Remove(id);
                 return View(messages);
             }
             TempData["ReturnMessage"] = $"Couldn't read list of messages sent.";
@@ -241,7 +267,7 @@ namespace TslWebApp.Controllers
             if (ComHelper.AccessiblePorts.Length == 0) {
                 return RedirectToAction(nameof(Manage));
             }
-            _smsService.ReInitComHelper(modemStatusModel.PortName);
+            _smsService.ReInitSmsd(modemStatusModel.PortName);
             await _gammuConfigService.PutValue("gammu", "device", ComHelper.PortName);
             await _gammuConfigService.PutValue("smsd", "device", ComHelper.PortName);
             await _gammuConfigService.Save();

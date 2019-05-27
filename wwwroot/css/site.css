@@ -58,3 +58,9 @@ body {
 .table-header-row {
     font-weight: bold;
 }
+
+.fab {
+    position: absolute;
+    bottom: 100px !important;
+    right: 100px !important;
+}

@@ -22,13 +22,18 @@ connection.onclose(async () => {
     await start();
 });
 
-connection.on("StartProgressCheck", (delay) => {
+connection.on("StartProgressCheck", function(delay) {
     StartCheckProgress(delay);
 });
 
-connection.on("ReceiveMessagesStatus", function(sentCount){
+connection.on("ReceiveMessagesStatus", function(sentCount, signalStrength, totalMessageCount){
     let statusControl = document.getElementById("status-control");
-    statusControl.innerHTML = sentCount;
+    statusControl.innerHTML = "Sent: " + sentCount + " Signal strength: " + signalStrength;
+    let progressBar = document.getElementById("progressbar");
+    progressBar.setAttribute("aria-valuemax", totalMessageCount);
+    progressBar.setAttribute("aria-valuenow", sentCount);
+    let progressValue = (sentCount / totalMessageCount) * 100;
+    progressBar.setAttribute("style", "width: " + progressValue+"%")
 });
 
 function StartCheckProgress(delay) {

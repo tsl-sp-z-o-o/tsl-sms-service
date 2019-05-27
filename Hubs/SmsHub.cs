@@ -14,18 +14,26 @@ namespace TslWebApp.Hubs
 
         public async Task Cancel()
         {
-           await _smsService.CancelAsync();
+            await _smsService.CancelAsync();
+            await Startup.WipeUtilProcesses();
         }
 
         public async Task GetMessagesStatusUpdate()
         {
-            var document = await _smsService.GetMessagesStatus();
-            var retVal = "Couldn't read status.";
-            if (document.Length > 0) {
-                retVal = document;
+            var statusTuple = await _smsService.GetStatus();
+            var retVal = "Sent count is unknown.";
+            if (!string.IsNullOrEmpty(statusTuple.Item1)) {
+                retVal = statusTuple.Item1;
             }
 
-            await Clients.User(this.Context.UserIdentifier).SendAsync("ReceiveMessagesStatus", retVal);
+            var signalStrength = "0";
+
+            if (!string.IsNullOrEmpty(statusTuple.Item2))
+            {
+                signalStrength = statusTuple.Item2;
+            }
+
+            await Clients.User(this.Context.UserIdentifier).SendAsync("ReceiveMessagesStatus", retVal, signalStrength, 21);
         }
     }
 }

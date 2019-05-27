@@ -1,0 +1,119 @@
+/*!
+ * Propeller v1.3.1 (http://propeller.in/): badge.css
+ * Copyright 2016-2018 Digicorp, Inc
+ * Licensed under MIT (http://propeller.in/LICENSE)
+ */
+.badge {
+  color: #fff;
+  background-color: #777777;
+  display: inline-block;
+  vertical-align: baseline; }
+
+.badge:hover {
+  color: #fff;
+  text-decoration: none;
+  cursor: pointer; }
+
+.badge-success {
+  color: #fff;
+  background-color: #259b24; }
+  .badge-success:hover, .badge-success:focus {
+    color: #fff;
+    background-color: #1b721a; }
+
+.badge-info {
+  color: #fff;
+  background-color: #03a9f4; }
+  .badge-info:hover, .badge-info:focus {
+    color: #fff;
+    background-color: #0286c2; }
+
+.badge-warning {
+  color: #333333;
+  background-color: #ffc107; }
+  .badge-warning:hover, .badge-warning:focus {
+    color: #333333;
+    background-color: #d39e00; }
+
+.badge-error {
+  color: #fff;
+  background-color: #ff5722; }
+  .badge-error:hover, .badge-error:focus {
+    color: #fff;
+    background-color: #ee3900; }
+
+.badge-inverse {
+  color: #fff;
+  background-color: #343a40; }
+  .badge-inverse:hover, .badge-inverse:focus {
+    color: #fff;
+    background-color: #1d2124; }
+
+.badge-information {
+  color: #fff;
+  background-color: #03a9f4; }
+  .badge-information:hover, .badge-information:focus {
+    color: #fff;
+    background-color: #0286c2; }
+
+.pmd-badge {
+  display: inline-block;
+  text-align: left;
+  position: relative;
+  font-size: 32px; }
+  .pmd-badge[data-badge]::after {
+    background: #4285f4;
+    color: #fff;
+    font-family: Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    font-size: 0.75rem;
+    font-weight: 700;
+    height: 22px;
+    width: 22px;
+    line-height: 22px;
+    border-radius: 50%;
+    right: -24px;
+    top: -10px;
+    content: attr(data-badge);
+    position: absolute;
+    text-align: center; }
+  .pmd-badge.pmd-badge-overlap::after {
+    right: -10px; }
+
+.pmd-chip {
+  border-radius: 1rem;
+  box-sizing: border-box;
+  line-height: 34px;
+  padding: 0 0.5rem 0 0.75rem;
+  text-transform: capitalize;
+  background: #E0E0E0;
+  color: rgba(0, 0, 0, 0.87);
+  display: inline-block;
+  cursor: default; }
+  .pmd-chip:hover, .pmd-chip:focus {
+    background-color: #e0e0e0; }
+  .pmd-chip.pmd-chip-inverse {
+    background: rgba(0, 0, 0, 0.87);
+    color: rgba(255, 255, 255, 0.87); }
+    .pmd-chip.pmd-chip-inverse:hover, .pmd-chip.pmd-chip-inverse:focus {
+      background-color: rgba(0, 0, 0, 0.87); }
+
+.pmd-chip-action {
+  display: inline-block;
+  vertical-align: middle; }
+  .pmd-chip-action i {
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.87);
+    background-color: #adadad;
+    border-radius: 50%;
+    padding: 1px 2px 2px 2px;
+    margin-left: 5px; }
+  .pmd-chip-action .material-icons:hover {
+    background-color: #949494; }
+
+.pmd-chip-contact {
+  padding-left: 0; }
+  .pmd-chip-contact img {
+    margin-right: 5px;
+    width: 2.25rem;
+    margin-top: -3px;
+    border-radius: 50%; }
