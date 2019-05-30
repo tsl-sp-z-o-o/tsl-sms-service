@@ -10,7 +10,7 @@ namespace TslWebApp.Models
 
         [Required]
         [CsvDataColumn]
-        [Display(Description = "The person identity.")]
+        [Display(Name = "Receiver", Description = "The person identity.")]
         public string Title { get; set; }
 
         [Required]
@@ -27,7 +27,7 @@ namespace TslWebApp.Models
 
         [Required]
         [CsvDataColumn]
-        [Display(Name = "Diriver's id", Description = "The identifier used in whole system to identify driver.")]
+        [Display(Name = "Id", Description = "The identifier used in whole system to identify driver.")]
         public int DriverId { get; set; }
     }
 }

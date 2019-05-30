@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using TslWebApp.Models;
 using TslWebApp.Utils.Csv;
@@ -20,12 +21,15 @@ namespace TslWebApp.Services
         Task<List<SmsMessage>> GetMessagesAsync(int? mid, int? driverId, int limit = 1);
 
         Task<List<SmsMessage>> ParseCsvFileAsync(string title, IFormFile file, bool headersExistanceMarker);
+        Task<string> DumpToFile(List<SmsMessage> messages);
 
         Task AddMessagesAsync(List<SmsMessage> messages);
 
         Task<Tuple<string,string>> GetStatus();
 
         Task DeleteSmsMessage(int id);
+
+        
 
         Task Dispose();
     }

@@ -1,0 +1,20 @@
+﻿@model ExportViewModel
+@{
+    ViewData["Title"] = "Export";
+}
+
+<h2>Export</h2>
+
+<form asp-controller="Sms" asp-action="ExportConfirmation" method="post">
+    <div class="col pb-4">
+        <button class="btn btn-danger btn-lg" type="submit">Export selected</button>
+        <a class="btn btn-primary btn-lg" asp-controller="Sms" asp-action="Messages" asp-route-av="list">Cancel</a>
+        <button class="btn btn-primary btn-lg" id="select-all-button" type="button">Select all</button>
+    </div>
+    <select id="export-message-select" asp-for="Ids" class="form-control pb-4" style="min-height: 500px;" required>
+        @foreach (var item in Model.Messages)
+        {
+            <option value="@item.Id">@item.Title</option>
+        }
+    </select>
+</form>

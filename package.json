@@ -11,6 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "@aspnet/signalr": "^1.1.4",
+    "@types/node": "^12.0.2",
     "propellerkit": "^1.3.1"
   }
 }

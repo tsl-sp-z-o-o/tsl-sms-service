@@ -24,18 +24,21 @@
 }
 else
 {
-<div class="table">
+<div>
     <div class="row table-header-row pb-3">
-        <div class="col-sm-2">
+        <div class="col-sm-1">
             @Html.DisplayNameFor(model => model.Messages.ElementAt(0).DriverId)
         </div>
-        <div class="col-sm-6">
+        <div class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Messages.ElementAt(0).Title)
+        </div>
+        <div class="col-sm-5">
             @Html.DisplayNameFor(model => model.Messages.ElementAt(0).Content)
         </div>
         <div class="col-sm-2">
             @Html.DisplayNameFor(model => model.Messages.ElementAt(0).PhoneNumber)
         </div>
-        <div class="col-sm-2">
+        <div class="col-sm-1">
             Options
         </div>
     </div>
@@ -45,25 +48,28 @@ else
     {
         @foreach (var item in Model.Messages)
         {
-            <div class="row">
+<div class="row">
 
-                <div class="col-sm-2">
-                    <p>@item.Id</p>
-                </div>
-                <div class="col-sm-6">
-                    <p>@item.Content</p>
-                </div>
-                <div class="col-sm-2">
-                    <p>@item.PhoneNumber</p>
-                </div>
-                <div class="col-sm-2">
-                    <a asp-controller="Sms" asp-action="EditMessage" asp-route-id="@item.Id">
-                        <i class="material-icons">
-                            edit
-                        </i>
-                    </a>
-                </div>
-            </div>
+    <div class="col-sm-1">
+        <p>@item.Id</p>
+    </div>
+    <div class="col-sm-2">
+        <p>@item.Title</p>
+    </div>
+    <div class="col-sm-5">
+        <p>@item.Content</p>
+    </div>
+    <div class="col-sm-2">
+        <p>@item.PhoneNumber</p>
+    </div>
+    <div class="col-sm-1">
+        <a asp-controller="Sms" asp-action="EditMessage" asp-route-id="@item.Id">
+            <i class="material-icons">
+                edit
+            </i>
+        </a>
+    </div>
+</div>
         }
     }
     <div class="menu pmd-floating-action fab" role="navigation">
@@ -75,8 +81,8 @@ else
             <span class="pmd-floating-hidden">Export</span>
             <i class="material-icons">import_export</i>
         </a>
-        <a asp-action="DeleteMessages" asp-route-av="delete" class="pmd-floating-action-btn btn btn-sm pmd-btn-fab pmd-btn-raised pmd-ripple-effect btn-default" data-title="Export">
-            <span class="pmd-floating-hidden">Export</span>
+        <a asp-action="Messages" asp-route-av="delete" class="pmd-floating-action-btn btn btn-sm pmd-btn-fab pmd-btn-raised pmd-ripple-effect btn-default" data-title="Delete">
+            <span class="pmd-floating-hidden">Delete</span>
             <i class="material-icons">delete</i>
         </a>
         <a class="pmd-floating-action-btn btn pmd-btn-fab pmd-btn-raised pmd-ripple-effect btn-primary" data-title="Menu">

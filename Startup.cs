@@ -19,17 +19,20 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using System.IO;
 using static TslWebApp.Services.Module;
+using Microsoft.Extensions.Logging;
 
 namespace TslWebApp
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        public Startup(IConfiguration configuration, ILogger<Startup> logger)
         {
             Configuration = configuration;
+            Logger = logger;
         }
 
         public IConfiguration Configuration { get; }
+        public static ILogger Logger { get; set; } 
         public IServiceProvider serviceProvider;
 
         // This method gets called by the runtime. Use this method to add services to the container.
@@ -130,10 +133,12 @@ namespace TslWebApp
         private void OnStarting()
         {
             WipeUtilProcesses().Wait();
+            Logger.LogInformation("Util processes wiped.");
         }
 
         private void OnShutdowned()
         {
+            Logger.LogInformation("Wiping util processes...");
             Task.Factory.StartNew(() => WipeUtilProcesses());
         }
 
@@ -153,8 +158,10 @@ namespace TslWebApp
                             gprocess.Kill();
                         }
                     }
-                    catch
-                    { }
+                    catch(Exception e)
+                    {
+                        Logger.LogError($"An error occurred: {e.Message}");
+                    }
                 });
             });
         }
@@ -166,9 +173,11 @@ namespace TslWebApp
 
         private async Task<Stack<Module>> LoadModules()
         {
+            
             return await Task.Factory.StartNew(() =>
             {
                 var modulesPath = Configuration.GetSection("Modules")["ModuleConfigPath"];
+                Logger.LogInformation($"Trying to load modules from {modulesPath}");
                 var json = File.ReadAllText(modulesPath);
                 var modules = JsonConvert.DeserializeObject<Dictionary<string, List<Module>>>(json);
 
@@ -193,7 +202,7 @@ namespace TslWebApp
                         moduleStack.Push(module);
                     });
                 });
-                
+                if (moduleStack.Count > 0) Logger.LogInformation($"{moduleStack.Count} modules loaded successfully.");
                 return moduleStack;
             });
         }

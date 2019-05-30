@@ -13,7 +13,9 @@ using TslWebApp.Data;
 using TslWebApp.Models;
 using TslWebApp.Utils;
 using TslWebApp.Utils.Csv;
+using TslWebApp.Utils.Log;
 using TslWebApp.Utils.Parser;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace TslWebApp.Services
 {
@@ -44,6 +46,7 @@ namespace TslWebApp.Services
 
         public async Task Init()
         {
+            _logger.LogInformation("Initializing...");
             if (!WasInitiated) {
                 _comHelper.PropertyChanged += new PropertyChangedEventHandler(AnswerStateChangedHandler);
                 await _comHelper.Init();
@@ -59,6 +62,7 @@ namespace TslWebApp.Services
         {
             if (WasInitiated)
             {
+                _logger.LogInformation("Disposing...");
                 _mainDbContext.Dispose();
                 _comHelper.Dispose();
                 await _gammuService.Dispose();
@@ -72,6 +76,7 @@ namespace TslWebApp.Services
 
         public async Task<List<SmsMessage>> SendAllAsync()
         {
+            _logger.LogInformation("Starting send all operation.");
             if (true)//temporarily
             {
                 return await Task<List<SmsMessage>>.Factory.StartNew(() =>
@@ -82,7 +87,7 @@ namespace TslWebApp.Services
                     {
                         await _gammuService.SendSmsAsync(message);
                     });
-
+                    _logger.LogInformation("All messages submitted.");
                     return resultMsgList;
                 });
             }
@@ -99,7 +104,8 @@ namespace TslWebApp.Services
 
         public async Task CancelAsync()
         {
-           await _gammuService.PurgeGammuProcesses();
+            _logger.LogInformation("Purging util processes...");
+            await _gammuService.PurgeGammuProcesses();
         }
 
         public async Task<List<SmsMessage>> GetMessagesAsync(int? mid, int? driverId, int limit = 100)
@@ -114,7 +120,6 @@ namespace TslWebApp.Services
                 return messages.GetRange(0, messages.Count >= limit ? limit : messages.Count);
             });
         }
-
 
         public async Task<bool> EditMessageAsync(EditMessageViewModel edit)
         {
@@ -132,8 +137,8 @@ namespace TslWebApp.Services
            return await Task.Factory.StartNew(() => {
                var state = _mainDbContext.Messages.Update(smsMessage).State;
                _mainDbContext.SaveChanges();
+               _logger.LogWarning("Database content changed, changes saved.");
                return state == Microsoft.EntityFrameworkCore.EntityState.Modified;
-
            });
         }
 
@@ -154,7 +159,7 @@ namespace TslWebApp.Services
                 }
                 catch (Exception e)
                 {
-                    Debug.WriteLine(e.Message);
+                    _logger.LogError(EventIds.IOEvent, $"Error occurred: {e.Message}");
                 }
 
                 _ = new List<SmsMessage>();
@@ -174,16 +179,63 @@ namespace TslWebApp.Services
                 }
                 catch (ArgumentException ex)
                 {
+                    _logger.LogError(EventIds.InvalidOperation, $"Error occurred: {ex.Message}");
                     throw ex;
                 }
                 catch (FormatException ex)
                 {
+                    _logger.LogError(EventIds.InvalidOperation, $"Error occurred: {ex.Message}");
                     throw ex;
                 }
                 
             }
-            Debug.WriteLine("Couldn't read from input file stream or it was 0 length stream!");
+            _logger.LogError($"Couldn't read from input file stream or it was 0 length stream!");
             throw new ArgumentException("Non-readable stream provided in IFileForm object.");
+        }
+
+        public async Task<string> DumpToFile(List<SmsMessage> messages)
+        {
+            return await Task.Factory.StartNew(() =>
+            {
+                CsvDocument csvDocument = new CsvDocument();
+                var colCount = CsvFormatRules.DataColCount;
+
+                var cols = new List<CsvColumn<CsvColCell<string>>>();
+                var csvDataProperties = typeof(SmsMessage).GetProperties()
+                                        .ToList()
+                                        .FindAll(property => property.GetCustomAttributes(true)
+                                        .Contains(new CsvDataColumnAttribute()));
+
+                foreach (var dataProperty in csvDataProperties)
+                {
+                    var cells = new List<CsvColCell<string>>();
+                    var col = new CsvColumn<CsvColCell<string>>("", cells);
+
+                    messages.ForEach(message =>
+                    {
+                        var value = dataProperty.GetValue(message);
+                        var cell = new CsvColCell<string>();
+                        cell.Index = cells.Count;
+                        cell.ParentColumn = col;
+                        cell.Value = value.ToString();
+                        cells.Add(cell);
+
+                    });
+                    cols.Add(col);
+                }
+                csvDocument.Cols = cols;
+                var path = CreatePath();
+                csvDocument.ToFile(path);
+                return path;
+            });
+        }
+
+        private string CreatePath()
+        {
+            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                                              "tsl",
+                                              $"export-{DateTime.Now}.csv".Replace(":", "-"))
+                                             .Replace(" ", "_");
         }
 
         public async Task AddMessagesAsync(List<SmsMessage> messages)
@@ -194,9 +246,11 @@ namespace TslWebApp.Services
                 {
                     foreach (var message in messages)
                     {
-                        if (messages.Where(messagePredicate => message.PhoneNumber == messagePredicate.PhoneNumber).ElementAt(0) != null)
+                        var isKnown = _mainDbContext.Messages.Any(m => m.DriverId == message.DriverId);
+                        if (isKnown)
                         {
-                            _mainDbContext.Messages.Update(message);
+                            var tmp = _mainDbContext.Messages.First(m => m.DriverId == message.DriverId);
+                            _mainDbContext.Messages.Update(tmp);
                         }
                         else
                         {
@@ -208,12 +262,12 @@ namespace TslWebApp.Services
                 }
                 catch (Exception e)
                 {
-                    Debug.WriteLine(e.Message);
+                    _logger.LogError(EventIds.DatabaseEvent, $"Error occurred: {e.Message}");
                 }
             }
             else
             {
-                Debug.WriteLine("No messages available.");
+                _logger.LogError(EventIds.InvalidOperation, "No messages available.");
             }
         }
 
@@ -236,17 +290,19 @@ namespace TslWebApp.Services
             }
             catch (Exception e)
             {
-                Debug.WriteLine(e.Message);
+                _logger.LogError(EventIds.InvalidOperation, $"Error occurred: {e.Message}");
                 throw e;
             }
         }
 
         public async Task DeleteSmsMessage(int id)
         {
+            _logger.LogInformation(EventIds.CommonEvent, $"Deleting message of id {id}");
             var messageModel = _mainDbContext.Messages.First(message => message.Id == id);
 
             _mainDbContext.Remove(messageModel);
             await _mainDbContext.SaveChangesAsync();
+            _logger.LogWarning(EventIds.DatabaseEvent, "Changes saved to database.");
         }
 
         #region HelperMethods
@@ -265,6 +321,7 @@ namespace TslWebApp.Services
                 }
                 catch (ArgumentException ex)
                 {
+                    _logger.LogError(EventIds.InvalidOperation, ex.Message);
                     throw ex;
                 }
             }
@@ -302,7 +359,8 @@ namespace TslWebApp.Services
             return smsMessageList;
         }
 
-        private void Process(ref List<SmsMessage> smsMessageList, ref int rowPtr, ref List<CsvColumn<CsvColCell<string>>> cols)
+        private void Process(ref List<SmsMessage> smsMessageList, 
+                             ref int rowPtr, ref List<CsvColumn<CsvColCell<string>>> cols)
         {
             for (; rowPtr < cols[0].Cells.Count; rowPtr++)
             {
@@ -318,6 +376,7 @@ namespace TslWebApp.Services
                     }
                     catch (ArgumentException ex)
                     {
+                        _logger.LogError(EventIds.InvalidOperation, ex.Message);
                         throw ex;
                     }
                    

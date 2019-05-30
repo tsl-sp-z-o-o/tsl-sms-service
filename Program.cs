@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.EventLog;
 
 namespace TslWebApp
 {
@@ -15,9 +16,9 @@ namespace TslWebApp
             WebHost.CreateDefaultBuilder(args)
             .ConfigureLogging((hostingContext, logging) =>
             {
-                logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
-                logging.AddConsole();
-                logging.AddDebug();
+                logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"))
+                .AddEventSourceLogger()
+                .AddEventLog();
             })
             .UseStartup<Startup>();
     }

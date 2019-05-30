@@ -29,11 +29,6 @@ namespace TslWebApp.Controllers
                 TempData["AlertType"] = "danger";
                 return RedirectToAction("Index", "Home");
             }
-            else
-            {
-                TempData["ReturnMessage"] = "Logged in successfully.";
-                TempData["AlertType"] = "success";
-            }
 
             var userModel = new UserModel()
             {
