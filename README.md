@@ -13,5 +13,6 @@ Application has been written, built and tested on Windows 10 x64. It is supposed
 
 # Documentation
 
-There will be two parts of documentation: the 1st one for sysadmins to properly deploy the whole system on the production server.
-And the 2nd one on purpose of any developer who will probably come along to help with or to improve the software.
+## Sysadmin documentation
+
+Docs for admins are accessible [here](https://github.com/tsl-sp-z-o-o/tsl-sms-service/blob/development/wwwroot/files/sysadmin-doc.rtf).
